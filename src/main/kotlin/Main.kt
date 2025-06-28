@@ -1,6 +1,5 @@
 package com.segtax
 
-import exposed.dao.DaoUserEntity
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -19,15 +18,15 @@ fun main() {
 //            email = "john@example.com"
 //        }
 
-        val existingUser = DaoUserEntity.findById(1)
-        println("User: ${existingUser?.name}")
-        existingUser!!.email = "foo@foo.com"
+//        val existingUser = DaoUserEntity.findById(1)
+//        println("User: ${existingUser?.name}")
+//        existingUser!!.email = "foo@foo.com"
     }
 
     transaction {
         addLogger(StdOutSqlLogger)
-        val updatedUser = DaoUserEntity.findById(1)
-        println("Updated User: ${updatedUser?.name}, Email: ${updatedUser?.email}")
+//        val updatedUser = DaoUserEntity.findById(1)
+//        println("Updated User: ${updatedUser?.name}, Email: ${updatedUser?.email}")
     }
 }
 

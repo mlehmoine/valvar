@@ -1,10 +1,7 @@
 package repository
 
 import dto.UserDto
-import exposed.dao.DaoUserEntity
-import exposed.dao.DaoUsersTable
 import exposed.dsl.DslUsersTable
-import mapper.UserMapper
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -12,7 +9,7 @@ import org.jetbrains.exposed.sql.insertReturning
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.updateReturning
 
-class UserRepository(private val userMapper: UserMapper) {
+class UserRepository() {
     /**
      * Retrieves a user by ID and returns it as a DTO.
      * Must be called within a transaction.
@@ -54,7 +51,7 @@ class UserRepository(private val userMapper: UserMapper) {
         // This performs the update and asks the database to return the specified columns for the updated row.
         // .singleOrNull() ensures we get a result only if exactly one row was updated.
         val updatedRow = DslUsersTable
-            .updateReturning(where = { DaoUsersTable.id eq dto.id }) {
+            .updateReturning(where = { DslUsersTable.id eq dto.id }) {
                 it[name] = dto.name
                 it[email] = dto.email
             }.singleOrNull()

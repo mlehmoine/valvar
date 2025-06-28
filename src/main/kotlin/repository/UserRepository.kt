@@ -3,12 +3,11 @@ package repository
 import dto.UserDto
 import exposed.dao.DaoUserEntity
 import exposed.dao.DaoUsersTable
-import exposed.dao.DaoUsersTable.email
-import exposed.dao.DaoUsersTable.name
 import exposed.dsl.DslUsersTable
 import mapper.UserMapper
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.updateReturning
 
 class UserRepository(private val userMapper: UserMapper) {
     /**
@@ -43,17 +42,23 @@ class UserRepository(private val userMapper: UserMapper) {
         return userMapper.toDto(entity)
     }
 
-    fun update(dto: UserDto): Int {
+    fun update(dto: UserDto): UserDto? {
         // This performs the update and asks the database to return the specified columns for the updated row.
         // .singleOrNull() ensures we get a result only if exactly one row was updated.
-        val updateCount = DslUsersTable
-            .update({ DaoUsersTable.id eq dto.id }) {
+        val updatedRow = DslUsersTable
+            .updateReturning(where = { DaoUsersTable.id eq dto.id }) {
                 it[name] = dto.name
                 it[email] = dto.email
-            }
+            }.singleOrNull()
 
-        return updateCount
+        return updatedRow?.let { toUserDto(it) }
     }
+
+    fun toUserDto(row: ResultRow): UserDto = UserDto(
+        id = row[DslUsersTable.id],
+        name = row[DslUsersTable.name],
+        email = row[DslUsersTable.email]
+    )
 
     /**
      * Deletes a user by ID.

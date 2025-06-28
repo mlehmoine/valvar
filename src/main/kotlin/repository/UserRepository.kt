@@ -3,8 +3,12 @@ package repository
 import dto.UserDto
 import exposed.dao.DaoUserEntity
 import exposed.dao.DaoUsersTable
+import exposed.dao.DaoUsersTable.email
+import exposed.dao.DaoUsersTable.name
+import exposed.dsl.DslUsersTable
 import mapper.UserMapper
-import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.update
 
 class UserRepository(private val userMapper: UserMapper) {
     /**
@@ -39,22 +43,16 @@ class UserRepository(private val userMapper: UserMapper) {
         return userMapper.toDto(entity)
     }
 
-    /**
-     * Updates an existing user with values from a DTO.
-     * Must be called within a transaction.
-     * @return Updated UserDto or null if the user was not found.
-     */
-    fun update(dto: UserDto): UserDto? {
+    fun update(dto: UserDto): Int {
+        // This performs the update and asks the database to return the specified columns for the updated row.
+        // .singleOrNull() ensures we get a result only if exactly one row was updated.
+        val updateCount = DslUsersTable
+            .update({ DaoUsersTable.id eq dto.id }) {
+                it[name] = dto.name
+                it[email] = dto.email
+            }
 
-        /* TODO:
-         *  There is a downside to this approach:
-         *  It takes one query to pull the entity by ID,
-         *  and then another query to update it.
-         */
-
-        val entity = DaoUserEntity.findById(dto.id) ?: return null
-        userMapper.updateEntity(dto, entity)
-        return userMapper.toDto(entity)
+        return updateCount
     }
 
     /**

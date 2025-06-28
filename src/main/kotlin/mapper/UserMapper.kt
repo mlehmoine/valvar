@@ -6,12 +6,15 @@ import exposed.dao.DaoUsersTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.mapstruct.Mapper
 import org.mapstruct.Mapping
+import org.mapstruct.MappingTarget
 import org.mapstruct.Named
 
 @Mapper(componentModel = "default") // Use "spring" if using Spring
 interface UserMapper {
     @Mapping(source = "id.value", target = "id") // Map EntityID<Long> to Long
     fun toDto(entity: DaoUserEntity): UserDto
+
+    fun updateEntity(dto: UserDto, @MappingTarget entity: DaoUserEntity): DaoUserEntity
 
     @Mapping(source = "id", target = "id", qualifiedByName = ["toEntityId"]) // Map Long to EntityID<Long>
     fun toEntity(dto: UserDto): DaoUserEntity

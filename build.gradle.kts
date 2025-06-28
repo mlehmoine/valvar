@@ -11,7 +11,7 @@ repositories {
 }
 
 val exposedVersion = "0.61.0"
-val mapstructVersion = "1.5.5.Final" // Add this line
+val mapstructVersion = "1.6.3" // Add this line
 
 dependencies {
     // Existing dependencies...

@@ -1,8 +1,6 @@
 package services
 
 import dao.DaoInvoice
-import dto.InvoiceDto
-import dto.InvoiceStatus
 import exposed.dsl.DslInvoices
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger

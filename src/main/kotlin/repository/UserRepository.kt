@@ -6,7 +6,10 @@ import exposed.dao.DaoUsersTable
 import exposed.dsl.DslUsersTable
 import mapper.UserMapper
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertReturning
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.updateReturning
 
 class UserRepository(private val userMapper: UserMapper) {
@@ -16,8 +19,12 @@ class UserRepository(private val userMapper: UserMapper) {
      * @return UserDto or null if not found.
      */
     fun findById(id: Long): UserDto? {
-        val entity = DaoUserEntity.findById(id)
-        return entity?.let { userMapper.toDto(it) }
+        val resultRow = DslUsersTable.select(DslUsersTable.id eq id).singleOrNull()
+
+        // 4. If a row was found, map it to a DTO.
+        return resultRow?.let {
+            toUserDto(it)
+        }
     }
 
     /**
@@ -26,7 +33,7 @@ class UserRepository(private val userMapper: UserMapper) {
      * @return List of UserDto.
      */
     fun findAll(): List<UserDto> {
-        return DaoUserEntity.all().map { userMapper.toDto(it) }
+        return DslUsersTable.selectAll().map { toUserDto(it) }
     }
 
     /**
@@ -35,11 +42,12 @@ class UserRepository(private val userMapper: UserMapper) {
      * @return Created UserDto.
      */
     fun create(dto: UserDto): UserDto {
-        val entity = DaoUserEntity.new {
-            name = dto.name
-            email = dto.email
-        }
-        return userMapper.toDto(entity)
+        val resultRow = DslUsersTable.insertReturning {
+            it[name] = dto.name
+            it[email] = dto.email
+        }.singleOrNull() ?: error("Failed to create user")
+
+        return toUserDto(resultRow)
     }
 
     fun update(dto: UserDto): UserDto? {
@@ -66,8 +74,7 @@ class UserRepository(private val userMapper: UserMapper) {
      * @return true if deleted, false if not found.
      */
     fun delete(id: Long): Boolean {
-        val entity = DaoUserEntity.findById(id) ?: return false
-        entity.delete()
-        return true
+        val rowDeleted = DslUsersTable.deleteWhere{DslUsersTable.id eq id}
+        return rowDeleted > 0
     }
 }

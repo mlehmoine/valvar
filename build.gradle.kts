@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.1.21"
+    kotlin("kapt") version "2.1.21" // Add this line for Kotlin annotation processing
 }
 
 group = "com.segtax"
@@ -10,35 +11,39 @@ repositories {
 }
 
 val exposedVersion = "0.61.0"
+val mapstructVersion = "1.5.5.Final" // Add this line
 
 dependencies {
+    // Existing dependencies...
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-
-    // DAO API, if you want to use Data Access Objects
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-
-    // JDBC driver and connection pooling (HikariCP)
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-
-    // Support for Java 8+ Date and Time API (LocalDate, etc.)
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-
-    // The actual PostgreSQL JDBC driver
     implementation("org.postgresql:postgresql:42.7.3")
-
-    // A logging implementation to see SQL output from Exposed
-    // You can use any SLF4J-compatible logger
     implementation("org.slf4j:slf4j-simple:2.0.13")
-
-    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
     implementation("com.zaxxer:HikariCP:6.3.0")
+
+    // Add MapStruct dependencies
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}")
+    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}")
 
     testImplementation(kotlin("test"))
 }
 
+// Rest of your existing configuration...
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
+}
+
+// Add KSP/KAPT configuration if needed
+kapt {
+    arguments {
+        // Optional MapStruct compiler options
+        arg("mapstruct.defaultComponentModel", "default")
+        arg("mapstruct.unmappedTargetPolicy", "IGNORE")
+    }
 }

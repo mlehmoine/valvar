@@ -11,5 +11,6 @@ fun main() {
     DatabaseFactory.init()
     val invoiceService = InvoiceService()
     invoiceService.demonstrateInserts()
+    invoiceService.demonstrateUpdates()
 }
 

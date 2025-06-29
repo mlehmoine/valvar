@@ -5,7 +5,7 @@ import ksp.GenerateRepository
 
 @GenerateRepository(DslUsersTable::class)
 data class UserDto(
-    val id: Long,
+    val id: Long? = null,
     val name: String,
     val email: String
 )

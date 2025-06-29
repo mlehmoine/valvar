@@ -7,7 +7,6 @@ import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toTypeName
-import org.jetbrains.exposed.sql.*
 
 class RepositoryProcessor(
     private val codeGenerator: CodeGenerator,
@@ -52,9 +51,8 @@ class RepositoryProcessor(
         // Generate repository class with MapStruct mapper
         val fileSpec = FileSpec.builder(packageName, repositoryName)
             .addImport(tablePackage, tableName)
-            .addImport("org.jetbrains.exposed.sql", "")
-            .addImport("java.sql", "PreparedStatement")
-            .addImport("java.sql", "ResultSet")
+            .addImport("org.jetbrains.exposed.sql", "selectAll", "insert", "updateReturning", "deleteWhere")
+            .addImport( "org.jetbrains.exposed.sql.SqlExpressionBuilder", "eq")
             .addType(
                 TypeSpec.interfaceBuilder("${dtoName}Mapper")
                     .addAnnotation(
@@ -89,7 +87,7 @@ class RepositoryProcessor(
                             .addParameter("id", Long::class)
                             .returns(ClassName(packageName, dtoName).copy(nullable = true))
                             .addStatement(
-                                "return %L.select { %L.id eq id }.singleOrNull()?.let { mapper.toDto(it) }",
+                                "return %L.select ( %L.id eq id ).singleOrNull()?.let { mapper.toDto(it) }",
                                 tableName, tableName
                             )
                             .build()
@@ -125,30 +123,20 @@ class RepositoryProcessor(
                     )
                     .addFunction(
                         FunSpec.builder("update")
+                            .addModifiers(KModifier.PUBLIC)
                             .addParameter("dto", ClassName(packageName, dtoName))
                             .returns(ClassName(packageName, dtoName).copy(nullable = true))
                             .addStatement(
-                                "val updatedRow = exec(" +
-                                        "%P" +
-                                        ") { ps ->",
-                                "UPDATE \${$tableName.tableName} SET ${properties.joinToString(", ") { "$tableName.${it.first}.name = ?" }} WHERE \${$tableName.id.name} = ? RETURNING \${$tableName.id.name}, ${properties.joinToString(", ") { "$tableName.${it.first}.name" }}"
+                                "val resultRow = %L.updateReturning( where = { %L.id eq dto.id!! }) {",
+                                tableName, tableName
                             )
                             .apply {
-                                properties.forEachIndexed { index, (prop) ->
-                                    addStatement("    ps.setObject(%L, dto.%L)", index + 1, prop)
+                                properties.forEach { (prop) ->
+                                    addStatement("    it[%L.%L] = dto.%L", tableName, prop, prop)
                                 }
-                                addStatement("    ps.setLong(%L, dto.id)", properties.size + 1)
                             }
-                            .addStatement("    ps.executeQuery()")
-                            .addStatement("}?.use { rs ->")
-                            .addStatement("    if (rs.next()) {")
-                            .addStatement("        val row = ResultRow.create(rs, %L.columns)", tableName)
-                            .addStatement("        mapper.toDto(row)")
-                            .addStatement("    } else {")
-                            .addStatement("        null")
-                            .addStatement("    }")
-                            .addStatement("}")
-                            .addStatement("return updatedRow")
+                            .addStatement("}.singleOrNull()")
+                            .addStatement("return resultRow?.let { mapper.toDto(it) }")
                             .build()
                     )
                     .addFunction(

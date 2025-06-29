@@ -1,49 +1,10 @@
 plugins {
-    kotlin("jvm") version "2.1.21"
-    kotlin("kapt") version "2.1.21" // Add this line for Kotlin annotation processing
+    kotlin("jvm") version "2.1.21" apply false
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2" apply false
 }
 
-group = "com.segtax"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-val exposedVersion = "0.61.0"
-val mapstructVersion = "1.6.3" // Add this line
-
-dependencies {
-    // Existing dependencies...
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    implementation("org.postgresql:postgresql:42.7.3")
-    implementation("org.slf4j:slf4j-simple:2.0.13")
-    implementation("com.zaxxer:HikariCP:6.3.0")
-
-    // Add MapStruct dependencies
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}")
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}")
-
-    testImplementation(kotlin("test"))
-}
-
-// Rest of your existing configuration...
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(21)
-}
-
-// Add KSP/KAPT configuration if needed
-kapt {
-    arguments {
-        // Optional MapStruct compiler options
-        arg("mapstruct.defaultComponentModel", "default")
-        arg("mapstruct.unmappedTargetPolicy", "IGNORE")
+subprojects {
+    repositories {
+        mavenCentral()
     }
 }

@@ -18,6 +18,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     ksp("org.mapstruct:mapstruct-processor:1.5.5.Final")
     // KSP processor subproject
+    implementation(project(":ksp-processor")) // Add this line
     ksp(project(":ksp-processor"))
 
     implementation("org.slf4j:slf4j-simple:2.0.13")

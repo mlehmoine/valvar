@@ -6,5 +6,5 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class GenerateRepository(
-    val tableClass: KClass<out org.jetbrains.exposed.dao.id.LongIdTable>
+    val tableClass: KClass<out org.jetbrains.exposed.sql.Table>
 )

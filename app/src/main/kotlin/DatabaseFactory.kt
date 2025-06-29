@@ -1,5 +1,6 @@
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import exposed.dsl.DslUsersTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -18,9 +19,9 @@ object DatabaseFactory {
             // Print the SQL logs to the console, which is very useful for debugging.
             addLogger(StdOutSqlLogger)
 
-            //println("Initializing database schema...")
-            // Create the tables based on your Table objects
-            //SchemaUtils.create(Invoices, InvoiceItems)
+            println("Initializing database schema...")
+            //Create the tables based on your Table objects
+            SchemaUtils.create(DslUsersTable)
             println("Schema initialized.")
         }
     }
@@ -30,9 +31,9 @@ object DatabaseFactory {
         // Exposed's Database.connect() can take a DataSource directly.
         val config = HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
-            jdbcUrl = "jdbc:postgresql://localhost:5432/exposed_poc" // Your DB URL
-            username = "application" // Your DB user
-            password = "password" // Replace with your actual password
+            jdbcUrl = "jdbc:postgresql://localhost:5432/valvardb" // Your DB URL
+            username = "valvar" // Your DB user
+            password = "valvarpw" // Replace with your actual password
             maximumPoolSize = 10
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"

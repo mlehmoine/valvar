@@ -26,13 +26,20 @@ class RepositoryProcessor(
         val packageName = dtoClass.packageName.asString()
         val dtoName = dtoClass.simpleName.asString()
         val repositoryName = "${dtoName}Repository"
+
         val annotation = dtoClass.annotations
             .find { it.shortName.asString() == "GenerateRepository" }
             ?: return logger.error("No GenerateRepository annotation on $dtoName")
-        val tableClass = annotation.arguments
+
+        // Get the table class from the annotation
+        val tableClassValue = annotation.arguments
             .find { it.name?.asString() == "tableClass" }
-            ?.value as? KSClassDeclaration
+            ?.value as? KSType
             ?: return logger.error("No tableClass specified for $dtoName")
+
+        val tableClass = tableClassValue.declaration as? KSClassDeclaration
+            ?: return logger.error("tableClass is not a valid class declaration")
+
         val tableName = tableClass.simpleName.asString()
         val tablePackage = tableClass.packageName.asString()
 

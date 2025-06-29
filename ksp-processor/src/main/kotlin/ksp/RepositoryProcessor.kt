@@ -54,9 +54,16 @@ class RepositoryProcessor(
             .addImport( "org.jetbrains.exposed.sql.SqlExpressionBuilder", "eq")
             .addType(
                 TypeSpec.classBuilder(repositoryName)
+                    .addModifiers(KModifier.OPEN)
+                    .addProperty(
+                        PropertySpec.builder("table", ClassName(tablePackage, tableName))
+                            .initializer("%L", tableName)
+                            .addModifiers(KModifier.PROTECTED)
+                            .build()
+                    )
                     .addFunction(
                         FunSpec.builder("toDto")
-                            .addModifiers(KModifier.PRIVATE)
+                            .addModifiers(KModifier.PROTECTED)
                             .addParameter("row", ClassName("org.jetbrains.exposed.sql", "ResultRow"))
                             .returns(ClassName(packageName, dtoName))
                             .addCode(
@@ -76,7 +83,7 @@ class RepositoryProcessor(
                             .addParameter("id", Long::class)
                             .returns(ClassName(packageName, dtoName).copy(nullable = true))
                             .addStatement(
-                                "return %L.select ( %L.id eq id ).singleOrNull()?.let { toDto(it) }",
+                                "return %L.selectAll().where { %L.id eq id }.singleOrNull()?.let { toDto(it) }",
                                 tableName, tableName
                             )
                             .build()

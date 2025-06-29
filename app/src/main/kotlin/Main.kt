@@ -1,22 +1,12 @@
-package com.segtax
-
 import dto.UserDto
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
-import dto.UserDtoRepository
-import exposed.dsl.DslUsersTable
-import org.jetbrains.exposed.sql.updateReturning
+import repository.UserDtoRepositoryExt
 
-//import dto.UserDtoMapperImpl
-
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 fun main() {
     DatabaseFactory.init()
-    //val invoiceService = InvoiceService()
-    //invoiceService.demonstrateInserts()
-    //invoiceService.demonstrateUpdates()
+
     transaction {
         addLogger(StdOutSqlLogger)
 
@@ -25,25 +15,23 @@ fun main() {
             email = "john@wick.com"
         )
 
+        val userRepository = UserDtoRepositoryExt()
 
+        println("user with id 1:")
+        userRepository.findById(1)?.let { user ->
+            println("User: ${user.name}, Email: ${user.email}")
+        } ?: println("User not found")
 
-       // val userMapper = UserDtoMapperImpl()
-        //val userRepository = UserDtoRepository()
+        println("All users:")
+        userRepository.findAll().forEach { user ->
+            println("User: ${user.name}, Email: ${user.email}")
+        }
 
-//        val userEntity = DaoUserEntity.new {
-//            name = "John Doe"
-//            email = "john@example.com"
-//        }
+        val user2 = userRepository.findById(2)!!
+        val modifiedUser = user2.copy(name = "Jane")
+        userRepository.update(modifiedUser)
 
-//        val existingUser = DaoUserEntity.findById(1)
-//        println("User: ${existingUser?.name}")
-//        existingUser!!.email = "foo@foo.com"
-    }
-
-    transaction {
-        addLogger(StdOutSqlLogger)
-//        val updatedUser = DaoUserEntity.findById(1)
-//        println("Updated User: ${updatedUser?.name}, Email: ${updatedUser?.email}")
+        userRepository.delete(2)
     }
 }
 

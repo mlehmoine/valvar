@@ -48,38 +48,27 @@ class RepositoryProcessor(
             .map { it.simpleName.asString() to it.type.resolve().toTypeName() }
             .toList()
 
-        // Generate repository class with MapStruct mapper
         val fileSpec = FileSpec.builder(packageName, repositoryName)
             .addImport(tablePackage, tableName)
             .addImport("org.jetbrains.exposed.sql", "selectAll", "insert", "updateReturning", "deleteWhere")
             .addImport( "org.jetbrains.exposed.sql.SqlExpressionBuilder", "eq")
             .addType(
-                TypeSpec.interfaceBuilder("${dtoName}Mapper")
-                    .addAnnotation(
-                        AnnotationSpec.builder(ClassName("org.mapstruct", "Mapper"))
-                            .addMember("componentModel = %S", "default")
-                            .build()
-                    )
+                TypeSpec.classBuilder(repositoryName)
                     .addFunction(
                         FunSpec.builder("toDto")
+                            .addModifiers(KModifier.PRIVATE)
                             .addParameter("row", ClassName("org.jetbrains.exposed.sql", "ResultRow"))
                             .returns(ClassName(packageName, dtoName))
-                            .addModifiers(KModifier.ABSTRACT)
-                            .build()
-                    )
-                    .build()
-            )
-            .addType(
-                TypeSpec.classBuilder(repositoryName)
-                    .primaryConstructor(
-                        FunSpec.constructorBuilder()
-                            .addParameter("mapper", ClassName(packageName, "${dtoName}Mapper"))
-                            .build()
-                    )
-                    .addProperty(
-                        PropertySpec.builder("mapper", ClassName(packageName, "${dtoName}Mapper"))
-                            .initializer("mapper")
-                            .addModifiers(KModifier.PRIVATE)
+                            .addCode(
+                                buildString {
+                                    append("return $dtoName(\n")
+                                    append("    id = row[$tableName.id]")
+                                    properties.forEach { (propName, _) ->
+                                        append(",\n    $propName = row[$tableName.$propName]")
+                                    }
+                                    append("\n)\n")
+                                }
+                            )
                             .build()
                     )
                     .addFunction(
@@ -87,7 +76,7 @@ class RepositoryProcessor(
                             .addParameter("id", Long::class)
                             .returns(ClassName(packageName, dtoName).copy(nullable = true))
                             .addStatement(
-                                "return %L.select ( %L.id eq id ).singleOrNull()?.let { mapper.toDto(it) }",
+                                "return %L.select ( %L.id eq id ).singleOrNull()?.let { toDto(it) }",
                                 tableName, tableName
                             )
                             .build()
@@ -96,7 +85,7 @@ class RepositoryProcessor(
                         FunSpec.builder("findAll")
                             .returns(List::class.asClassName().parameterizedBy(ClassName(packageName, dtoName)))
                             .addStatement(
-                                "return %L.selectAll().map { mapper.toDto(it) }",
+                                "return %L.selectAll().map { toDto(it) }",
                                 tableName
                             )
                             .build()
@@ -118,7 +107,7 @@ class RepositoryProcessor(
                                 "}.resultedValues?.singleOrNull() ?: throw IllegalStateException(%P)",
                                 "Failed to create $dtoName"
                             )
-                            .addStatement("return mapper.toDto(newRow)")
+                            .addStatement("return toDto(newRow)")
                             .build()
                     )
                     .addFunction(
@@ -136,7 +125,7 @@ class RepositoryProcessor(
                                 }
                             }
                             .addStatement("}.singleOrNull()")
-                            .addStatement("return resultRow?.let { mapper.toDto(it) }")
+                            .addStatement("return resultRow?.let { toDto(it) }")
                             .build()
                     )
                     .addFunction(

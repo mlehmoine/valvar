@@ -80,4 +80,5 @@ class UserDtoRepositoryExt : UserDtoRepository() {
             .where { DslUsersTable.email eq email }
             .singleOrNull()?.let { toDto(it) }
     }
-}```
+}
+```

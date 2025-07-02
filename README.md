@@ -56,7 +56,7 @@ data class UserDto(
     val email: String
 )
 ```
-Did you notice that annotation, `@@GenerateRepository`?  When the project builds, it will generate a CRUD repository
+Did you notice that annotation, `@GenerateRepository`?  When the project builds, it will generate a CRUD repository
 for the `UserDto` class.  The repository will be named `UserDtoRepository`.  It will have methods
 like
  - `findById`
